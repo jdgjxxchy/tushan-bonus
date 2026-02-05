@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import Database from 'better-sqlite3'
 
-const dbPath = join(process.cwd(), '/data/database.sqlite')
+const dbPath = join('./data/database.sqlite')
 const db = new Database(dbPath)
 
 // Initialize tables
