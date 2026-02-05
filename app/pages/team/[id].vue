@@ -111,7 +111,7 @@ async function submitRecord() {
     </div>
 
     <!-- Tabs -->
-    <div class="mb-8 border-b border-gray-200 flex gap-6 dark:border-gray-700">
+    <div class="mb-8 border-b border-gray-200 flex gap-6">
       <button
         v-for="tab in [{ k: 'register', l: '团队登记' }, { k: 'settlement', l: '团队结算' }]"
         :key="tab.k"
@@ -141,7 +141,7 @@ async function submitRecord() {
       <div v-else class="space-y-8">
         <!-- Role Selection -->
         <div>
-          <label class="text-sm text-gray-700 font-medium mb-3 block dark:text-gray-300">选择您的职责</label>
+          <label class="text-sm text-gray-700 font-medium mb-3 block">选择您的职责</label>
           <div class="flex gap-4">
             <button
               class="py-4 border-2 rounded-xl flex flex-1 flex-col gap-2 transition-colors items-center"
@@ -163,9 +163,9 @@ async function submitRecord() {
           </div>
 
           <!-- DPS Input -->
-          <div v-if="roleType" class="mt-4 p-6 border border-gray-100 rounded-2xl bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div v-if="roleType" class="mt-4 p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
             <div v-if="roleType === 'dps'" class="space-y-4">
-              <label class="text-sm text-gray-700 font-medium block dark:text-gray-300">请输入您的排名</label>
+              <label class="text-sm text-gray-700 font-medium block">请输入您的排名</label>
               <div class="flex gap-4 items-center">
                 <div class="i-carbon-trophy text-2xl text-yellow-500" />
                 <input
@@ -180,7 +180,7 @@ async function submitRecord() {
             </div>
 
             <div v-if="roleType === 'support'" class="space-y-4">
-              <label class="text-sm text-gray-700 font-medium block dark:text-gray-300">层数</label>
+              <label class="text-sm text-gray-700 font-medium block">层数</label>
               <div class="gap-4 grid grid-cols-2">
                 <button
                   class="text-lg font-bold py-3 border rounded-lg transition-colors"
@@ -216,7 +216,7 @@ async function submitRecord() {
 
     <!-- Tab Content: Settlement -->
     <div v-if="activeTab === 'settlement' && settlement" class="card p-0 overflow-hidden">
-      <div class="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-gray-700 dark:bg-gray-800">
+      <div class="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
         <div>
           <h2 class="text-xl font-bold">
             本周结算表
@@ -238,7 +238,7 @@ async function submitRecord() {
       <div class="overflow-x-auto">
         <table class="text-left w-full">
           <thead>
-            <tr class="text-sm text-gray-400 border-b border-gray-100 dark:border-gray-700">
+            <tr class="text-sm text-gray-400 border-b border-gray-100">
               <th class="font-medium px-6 py-4">
                 登记时间
               </th>
@@ -256,8 +256,8 @@ async function submitRecord() {
               </th>
             </tr>
           </thead>
-          <tbody class="divide-gray-100 divide-y dark:divide-gray-700">
-            <tr v-for="record in settlement.records" :key="record.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+          <tbody class="divide-gray-100 divide-y">
+            <tr v-for="record in settlement.records" :key="record.id" class="transition-colors hover:bg-gray-50">
               <td class="text-gray-500 px-6 py-4">
                 {{ new Date(record.created_at).toLocaleString() }}
               </td>

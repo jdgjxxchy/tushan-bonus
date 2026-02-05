@@ -49,12 +49,12 @@ function getThisMonday() {
       <!-- Personal Weekly Summary -->
       <!-- Personal Weekly Summary -->
       <div class="mb-10">
-        <h2 class="text-xl text-gray-800 font-bold mb-4 flex gap-2 items-center dark:text-gray-100">
+        <h2 class="text-xl text-gray-800 font-bold mb-4 flex gap-2 items-center">
           <div class="i-carbon-user-identification text-teal-600" />
           本周个人收益
         </h2>
 
-        <div v-if="myStats && myStats.find(u => u.user_id === userStore.user.id)" class="p-6 border border-gray-200 rounded-xl bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div v-if="myStats && myStats.find(u => u.user_id === userStore.user.id)" class="p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
           <div class="flex items-center justify-between">
             <div>
               <div class="text-sm text-gray-500 mb-1">
@@ -66,18 +66,18 @@ function getThisMonday() {
             </div>
             <!-- Mini Breakdown -->
             <div class="flex gap-4">
-              <div v-for="record in myStats.find(u => u.user_id === userStore.user.id).breakdown" :key="record.id" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+              <div v-for="record in myStats.find(u => u.user_id === userStore.user.id).breakdown" :key="record.id" class="px-4 py-2 rounded-lg bg-gray-100">
+                <div class="text-xs text-gray-500">
                   {{ record.team_name }}
                 </div>
-                <div class="text-gray-800 font-bold dark:text-gray-200">
+                <div class="text-gray-800 font-bold">
                   +{{ record.subsidy_amount }}
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div v-else class="text-gray-500 p-6 text-center border border-gray-200 rounded-xl border-dashed bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+        <div v-else class="text-gray-500 p-6 text-center border border-gray-200 rounded-xl border-dashed bg-gray-50">
           本周暂无收益记录
         </div>
       </div>
@@ -92,10 +92,10 @@ function getThisMonday() {
         <!-- Existing Teams -->
         <div v-for="team in myTeams" :key="team.id" class="group card border-l-4 border-l-teal-500 flex flex-col cursor-pointer transition-all hover:shadow-xl" @click="navigateTo(`/team/${team.id}`)">
           <div class="mb-2 flex items-start justify-between">
-            <h2 class="text-xl text-gray-800 font-bold transition-colors dark:text-gray-100 group-hover:text-teal-600">
+            <h2 class="text-xl text-gray-800 font-bold transition-colors group-hover:text-teal-600">
               {{ team.name }}
             </h2>
-            <div class="text-xs text-gray-500 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700">
+            <div class="text-xs text-gray-500 px-2 py-1 rounded-full bg-gray-100">
               已加入
             </div>
           </div>
@@ -103,7 +103,7 @@ function getThisMonday() {
             {{ team.description || '暂无简介' }}
           </p>
 
-          <div class="text-sm text-gray-400 mt-auto pt-4 border-t border-gray-100 flex gap-4 items-center dark:border-gray-700">
+          <div class="text-sm text-gray-400 mt-auto pt-4 border-t border-gray-100 flex gap-4 items-center">
             <div class="flex gap-1 items-center">
               <div class="i-carbon-user-multiple" /> {{ team.member_count }} 成员
             </div>

@@ -29,10 +29,6 @@ body,
   padding: 0;
 }
 
-html.dark {
-  color-scheme: dark;
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

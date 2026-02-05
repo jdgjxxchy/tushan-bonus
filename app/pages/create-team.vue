@@ -168,31 +168,31 @@ async function createTeam() {
       <!-- Basic Info -->
       <div class="gap-6 grid grid-cols-1 md:grid-cols-2">
         <div>
-          <label class="text-gray-700 font-medium mb-2 block dark:text-gray-300">队伍名称</label>
+          <label class="text-gray-700 font-medium mb-2 block">队伍名称</label>
           <input v-model="name" class="text-lg input w-full" placeholder="例如：周二晚间固定团">
         </div>
         <div>
-          <label class="text-gray-700 font-medium mb-2 block dark:text-gray-300">简介 (选填)</label>
+          <label class="text-gray-700 font-medium mb-2 block">简介 (选填)</label>
           <input v-model="description" class="text-lg input w-full" placeholder="简单描述一下...">
         </div>
       </div>
 
       <div>
-        <label class="text-gray-700 font-medium mb-2 block dark:text-gray-300">开团日期</label>
+        <label class="text-gray-700 font-medium mb-2 block">开团日期</label>
         <NDatePicker v-model:value="raidDateTs" type="date" class="w-full" />
       </div>
 
-      <hr class="border-gray-200 dark:border-gray-700">
+      <hr class="border-gray-200">
 
       <!-- Template Section -->
-      <div class="p-4 border border-gray-100 rounded-lg bg-gray-50/50 flex gap-4 items-end dark:border-gray-700 dark:bg-white/5">
+      <div class="p-4 border border-gray-100 rounded-lg bg-gray-50/50 flex gap-4 items-end">
         <div class="flex-1">
-          <label class="text-sm text-teal-700 font-medium mb-2 block dark:text-teal-400">使用模板</label>
+          <label class="text-sm text-teal-700 font-medium mb-2 block">使用模板</label>
           <NSelect v-model:value="selectedTemplate" :options="templateOptions" placeholder="选择模板" />
         </div>
 
         <div class="flex-1">
-          <label class="text-sm text-gray-600 font-medium mb-2 block dark:text-gray-400">保存当前配置为模板</label>
+          <label class="text-sm text-gray-600 font-medium mb-2 block">保存当前配置为模板</label>
           <div class="flex gap-2">
             <input v-model="currentTemplateName" class="input w-full" placeholder="模板名称">
             <button :disabled="!currentTemplateName" class="btn-secondary whitespace-nowrap" @click="saveTemplate">
@@ -204,7 +204,7 @@ async function createTeam() {
 
       <!-- Rules Grid -->
       <div>
-        <h3 class="text-lg text-teal-700 font-medium mb-4 dark:text-teal-400">
+        <h3 class="text-lg text-teal-700 font-medium mb-4">
           补贴规则设置
         </h3>
 
@@ -213,16 +213,16 @@ async function createTeam() {
           <div class="space-y-4">
             <div class="mb-2 pb-2 border-b border-gray-100 flex gap-2 items-center">
               <div class="i-carbon-chart-line text-xl text-teal-500" />
-              <span class="text-gray-700 font-bold dark:text-gray-200">输出排名补贴 (DPS)</span>
+              <span class="text-gray-700 font-bold">输出排名补贴 (DPS)</span>
             </div>
 
             <div v-for="rule in dpsRules" :key="rule.rank" class="flex gap-4 items-center">
-              <div class="text-gray-600 font-medium font-mono w-24 dark:text-gray-400">
+              <div class="text-gray-600 font-medium font-mono w-24">
                 第 {{ rule.rank }} 名
               </div>
               <div class="flex-1 relative">
                 <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>
-                <input v-model="rule.amount" type="number" class="input text-teal-600 font-bold pl-8 w-full" placeholder="0">
+                <input v-model="rule.amount" class="input text-teal-600 font-bold pl-8 w-full" placeholder="0">
               </div>
             </div>
           </div>
@@ -231,14 +231,14 @@ async function createTeam() {
           <div class="space-y-4">
             <div class="mb-2 pb-2 border-b border-gray-100 flex gap-2 items-center">
               <div class="i-carbon-favorite text-xl text-pink-500" />
-              <span class="text-gray-700 font-bold dark:text-gray-200">治疗/T 层数</span>
+              <span class="text-gray-700 font-bold">治疗/T 层数</span>
             </div>
 
             <div v-for="rule in perfRules" :key="rule.threshold" class="flex gap-4 items-center">
               <div class="flex gap-1 w-32 items-center">
-                <span class="text-sm text-gray-600 font-medium whitespace-nowrap dark:text-gray-400">层数</span>
+                <span class="text-sm text-gray-600 font-medium whitespace-nowrap">层数</span>
                 <input v-model="rule.threshold" type="number" class="text-sm input px-2 py-1 text-center w-16" placeholder="90">
-                <span class="text-gray-600 font-medium dark:text-gray-400">+</span>
+                <span class="text-gray-600 font-medium">+</span>
               </div>
               <div class="flex-1 relative">
                 <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>

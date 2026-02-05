@@ -43,14 +43,14 @@ async function changeWeek(offset: number) {
         </h1>
       </div>
 
-      <div class="p-1 border border-gray-200 rounded-lg bg-white flex gap-4 shadow-sm items-center dark:border-gray-700 dark:bg-black">
-        <button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800" @click="changeWeek(-1)">
+      <div class="p-1 border border-gray-200 rounded-lg bg-white flex gap-4 shadow-sm items-center">
+        <button class="p-2 rounded hover:bg-gray-100" @click="changeWeek(-1)">
           <div class="i-carbon-chevron-left" />
         </button>
         <div class="font-bold font-mono px-4 text-center min-w-[200px]">
           {{ displayWeek }}
         </div>
-        <button class="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800" @click="changeWeek(1)">
+        <button class="p-2 rounded hover:bg-gray-100" @click="changeWeek(1)">
           <div class="i-carbon-chevron-right" />
         </button>
       </div>
@@ -73,9 +73,9 @@ async function changeWeek(offset: number) {
           </div>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 dark:border-gray-700">
+        <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
           <div v-for="record in user.breakdown" :key="record.id" class="text-sm flex items-center justify-between">
-            <div class="text-gray-600 flex gap-2 items-center dark:text-gray-300">
+            <div class="text-gray-600 flex gap-2 items-center">
               <div class="rounded-full bg-teal-400 h-2 w-2" />
               <span>{{ record.team_name }}</span>
             </div>
@@ -90,7 +90,7 @@ async function changeWeek(offset: number) {
       </div>
     </div>
 
-    <div v-else class="py-20 text-center border border-gray-200 rounded-xl border-dashed bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+    <div v-else class="py-20 text-center border border-gray-200 rounded-xl border-dashed bg-gray-50">
       <div class="i-carbon-chart-bar text-6xl text-gray-200 mx-auto mb-4" />
       <p class="text-lg text-gray-500">
         本周暂无数据

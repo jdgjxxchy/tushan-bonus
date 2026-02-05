@@ -14,7 +14,7 @@ const userStore = useUserStore()
        <NuxtLink to="/dashboard" class="text-gray-600 hover:text-teal-600 font-medium transition-colors decoration-none">
          工作台
        </NuxtLink>
-       <div class="w-1px h-6 bg-gray-200 dark:bg-gray-700" />
+       <div class="w-1px h-6 bg-gray-200" />
        
        <div v-if="userStore.user" class="flex items-center gap-4">
           <div class="flex items-center gap-2">

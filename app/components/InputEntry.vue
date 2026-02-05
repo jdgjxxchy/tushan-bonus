@@ -18,7 +18,7 @@ function go() {
       autocomplete="off"
       p="x-4 y-2" m="t-5" w="250px"
       text="center" bg="transparent"
-      border="~ rounded gray-200 dark:gray-700"
+      border="~ rounded gray-200"
       outline="none active:none"
       @keydown.enter="go"
     >

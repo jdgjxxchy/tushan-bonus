@@ -17,12 +17,12 @@ export default defineConfig({
     ['icon-btn', 'inline-block cursor-pointer select-none opacity-75 transition duration-200 ease-in-out hover:opacity-100 hover:text-teal-600'],
     ['card', 'bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 border border-white/20'],
     ['input', 'px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white/80 backdrop-blur-sm transition-all text-gray-900 placeholder:text-gray-400'],
-    ['title', 'text-2xl font-bold font-display text-gray-900 dark:text-gray-100'],
+    ['title', 'text-2xl font-bold font-display text-gray-900'],
   ],
   theme: {
     colors: {
-        // Custom colors if needed, but tailwind colors usually suffice
-    }
+      // Custom colors if needed, but tailwind colors usually suffice
+    },
   },
   presets: [
     presetWind4(),
