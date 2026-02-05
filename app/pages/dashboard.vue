@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek.js'
+
+dayjs.extend(isoWeek)
 
 const userStore = useUserStore()
 
@@ -7,9 +10,14 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const teamFilter = ref<'weekly' | 'all'>('weekly')
+
 // My Teams
-const { data: myTeams, refresh } = await useFetch('/api/teams', {
+const { data: myTeams, refresh: refreshTeams } = await useFetch<any[]>('/api/teams', {
   key: 'my-teams',
+  query: {
+    filter: teamFilter,
+  },
 })
 
 // My Weekly Stats
@@ -18,14 +26,7 @@ const { data: myStats } = await useFetch('/api/stats/weekly', {
 })
 
 function getThisMonday() {
-  // Dayjs handles Monday start correctly with .startOf('week') if locale is set, or manual calculation
-  // Default dayjs start of week is Sunday.
-  // Let's settle on ISO 8601 week (Monday start) or manual.
-  // Manual manual ensuring Monday:
-  const d = dayjs()
-  const day = d.day() // 0 is Sunday
-  const diff = d.date() - day + (day === 0 ? -6 : 1)
-  return d.date(diff).format('YYYY-MM-DD')
+  return dayjs().startOf('isoWeek').format('YYYY-MM-DD')
 }
 </script>
 
@@ -80,6 +81,23 @@ function getThisMonday() {
         <div v-else class="text-gray-500 p-6 text-center border border-gray-200 rounded-xl border-dashed bg-gray-50">
           本周暂无收益记录
         </div>
+      </div>
+
+      <div class="mb-6 flex gap-2">
+        <button
+          class="text-sm font-medium px-4 py-1.5 rounded-lg transition-all"
+          :class="teamFilter === 'weekly' ? 'bg-teal-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+          @click="teamFilter = 'weekly'"
+        >
+          当周团队
+        </button>
+        <button
+          class="text-sm font-medium px-4 py-1.5 rounded-lg transition-all"
+          :class="teamFilter === 'all' ? 'bg-teal-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+          @click="teamFilter = 'all'"
+        >
+          所有团队
+        </button>
       </div>
 
       <div class="gap-6 grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { NButton, NCard, NDatePicker, NDivider, NInput, NInputNumber, NSelect } from 'naive-ui'
+import { NDatePicker, NSelect } from 'naive-ui'
 
 definePageMeta({
   middleware: 'auth',
@@ -10,6 +10,8 @@ const name = ref('')
 const description = ref('')
 const loading = ref(false)
 const router = useRouter()
+const message = useMessage()
+const dialog = useDialog()
 
 // Date handling for Naive UI (timestamp)
 const raidDateTs = ref(Date.now())
@@ -50,19 +52,28 @@ function saveTemplate() {
   }
 
   if (existing >= 0) {
-    if (confirm('Create duplicate template? (Cancel to overwrite existing)')) {
-      templates.value.push(templateData)
-    }
-    else {
-      templates.value[existing] = templateData
-    }
+    dialog.warning({
+      title: '确认覆盖',
+      content: '该模板名称已存在，是否作为副本创建？(取消则覆盖现有模板)',
+      positiveText: '作为副本',
+      negativeText: '覆盖现有',
+      onPositiveClick: () => {
+        templates.value.push(templateData)
+        message.success('模板已作为副本保存')
+        currentTemplateName.value = ''
+      },
+      onNegativeClick: () => {
+        templates.value[existing] = templateData
+        message.success('模板已覆盖')
+        currentTemplateName.value = ''
+      },
+    })
   }
   else {
     templates.value.push(templateData)
+    message.success('模板已保存')
+    currentTemplateName.value = ''
   }
-
-  alert('模板已保存')
-  currentTemplateName.value = ''
 }
 
 function loadTemplate(tName: string) {
@@ -76,11 +87,18 @@ function loadTemplate(tName: string) {
 }
 
 function deleteTemplate(index: number) {
-  if (confirm('确定要删除这个模板吗？')) {
-    templates.value.splice(index, 1)
-    if (selectedTemplate.value)
-      selectedTemplate.value = null
-  }
+  dialog.warning({
+    title: '确认删除',
+    content: '确定要删除这个模板吗？',
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      templates.value.splice(index, 1)
+      if (selectedTemplate.value)
+        selectedTemplate.value = null
+      message.success('模板已删除')
+    },
+  })
 }
 
 watch(selectedTemplate, (val) => {
@@ -127,12 +145,25 @@ async function createTeam() {
 
   // Basic check
   if (rules.length === 0) {
-    if (!confirm('未设置任何补贴规则，确定要创建吗？')) {
-      loading.value = false
-      return
-    }
+    dialog.warning({
+      title: '确认发布',
+      content: '未设置任何补贴规则，确定要创建吗？',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        await executeCreate(rules, dateStr)
+      },
+      onNegativeClick: () => {
+        loading.value = false
+      },
+    })
+    return
   }
 
+  await executeCreate(rules, dateStr)
+}
+
+async function executeCreate(rules: any[], dateStr: string) {
   try {
     await $fetch('/api/teams', {
       method: 'POST',
@@ -145,9 +176,8 @@ async function createTeam() {
     })
     router.push('/dashboard')
   }
-  catch (e) {
-    console.error(e)
-    alert(`创建失败: ${(e as any).statusMessage}` || 'Unknown error')
+  catch {
+    message.error('创建失败')
   }
   finally {
     loading.value = false

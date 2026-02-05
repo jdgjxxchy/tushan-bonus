@@ -12,11 +12,15 @@ useHead({
 <template>
   <VitePwaManifest />
   <n-notification-provider>
-    <div class="text-gray-700 font-sans min-h-screen transition-colors duration-300 from-indigo-50 to-cyan-50 via-white bg-gradient-to-br">
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </div>
+    <n-message-provider>
+      <n-dialog-provider>
+        <div class="text-gray-700 font-sans min-h-screen transition-colors duration-300 from-indigo-50 to-cyan-50 via-white bg-gradient-to-br">
+          <NuxtLayout>
+            <NuxtPage />
+          </NuxtLayout>
+        </div>
+      </n-dialog-provider>
+    </n-message-provider>
   </n-notification-provider>
 </template>
 

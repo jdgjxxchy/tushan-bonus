@@ -2,10 +2,11 @@
 const route = useRoute()
 const teamId = route.params.id
 const userStore = useUserStore()
+const message = useMessage()
 
 definePageMeta({ middleware: 'auth' })
 
-const { data: team, refresh } = await useFetch(`/api/teams/${teamId}`)
+const { data: team, refresh } = await useFetch<any>(`/api/teams/${teamId}`)
 
 // Registration Logic
 const activeTab = ref('register') // register, settlement
@@ -26,7 +27,7 @@ function switchRole(type: 'dps' | 'support') {
 }
 
 // Settlement Logic - Moved up to be available for submitRecord
-const { data: settlement, refresh: refreshSettlement } = await useFetch(`/api/teams/${teamId}/settlement`, {
+const { data: settlement, refresh: refreshSettlement } = await useFetch<any>(`/api/teams/${teamId}/settlement`, {
   key: `settlement-${teamId}`,
   immediate: false,
 })
@@ -87,11 +88,22 @@ async function submitRecord() {
     })
     refreshSettlement()
   }
-  catch (e) {
-    alert('提交失败')
+  catch {
+    message.error('提交失败')
   }
   finally {
     submitting.value = false
+  }
+}
+
+async function deleteTeam() {
+  try {
+    await $fetch(`/api/teams/${teamId}`, { method: 'DELETE' })
+    notification.success({ title: '删除成功', duration: 3000 })
+    navigateTo('/dashboard')
+  }
+  catch {
+    message.error('删除失败')
   }
 }
 </script>
@@ -104,6 +116,14 @@ async function submitRecord() {
         <h1 class="title">
           {{ team.name }}
         </h1>
+        <n-popconfirm v-if="String(team.owner_id) === String(userStore.user?.id)" @positive-click="deleteTeam">
+          <template #trigger>
+            <button class="text-sm text-red-500 font-medium ml-auto flex gap-1 transition-colors items-center hover:text-red-700">
+              <div class="i-carbon-trash-can" /> 删除团队
+            </button>
+          </template>
+          确定要删除该团队吗？此操作不可撤销。
+        </n-popconfirm>
       </div>
       <p class="text-gray-500">
         {{ team.description }}
@@ -286,4 +306,5 @@ async function submitRecord() {
       </div>
     </div>
   </div>
+  <div v-else />
 </template>

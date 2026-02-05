@@ -28,6 +28,7 @@ db.exec(`
     raid_date TEXT, -- YYYY-MM-DD
     owner_id INTEGER DEFAULT 0, -- 0 for public teams or just ownerless for now
     rules JSON, -- Array of rules
+    is_deleted INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   

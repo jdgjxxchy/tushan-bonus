@@ -1,29 +1,29 @@
+import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek.js'
 import { useDb } from '~~/server/utils/db'
+
+dayjs.extend(isoWeek)
 
 export default defineEventHandler((event) => {
   const userId = getCookie(event, 'auth_user_id')
   const query = getQuery(event)
   const db = useDb()
 
-  if (query.my && userId) {
-    const teams = db.prepare(`
-       SELECT t.id, t.name, t.description, t.created_at, t.raid_date,
+  let sql = `
+       SELECT t.id, t.name, t.description, t.created_at, t.raid_date, t.owner_id,
               (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count 
        FROM teams t 
-       JOIN team_members tm ON t.id = tm.team_id 
-       WHERE tm.user_id = ?
-       ORDER BY t.created_at DESC
-     `).all(userId)
-    return teams
+       WHERE t.is_deleted = 0
+    `
+  const params: any[] = []
+
+  if (query.filter === 'weekly') {
+    const monday = dayjs().startOf('isoWeek').format('YYYY-MM-DD')
+    const sunday = dayjs().endOf('isoWeek').format('YYYY-MM-DD')
+    sql += ' AND t.raid_date >= ? AND t.raid_date <= ?'
+    params.push(monday, sunday)
   }
 
-  // Return all teams for search
-  const teams = db.prepare(`
-    SELECT t.id, t.name, t.description, t.created_at, t.raid_date,
-           (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) as member_count 
-    FROM teams t 
-    ORDER BY t.created_at DESC LIMIT 50
-  `).all()
-
-  return teams
+  sql += ' ORDER BY t.raid_date DESC, t.created_at DESC'
+  return db.prepare(sql).all(...params)
 })

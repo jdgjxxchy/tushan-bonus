@@ -6,12 +6,7 @@ const qqId = ref('')
 const nickname = ref('')
 const loading = ref(false)
 
-onMounted(async () => {
-  await userStore.fetchUser()
-  if (userStore.user) {
-    router.push('/dashboard')
-  }
-})
+const message = useMessage()
 
 async function handleLogin() {
   if (!qqId.value || !nickname.value)
@@ -21,8 +16,8 @@ async function handleLogin() {
     await userStore.login(qqId.value, nickname.value)
     router.push('/dashboard')
   }
-  catch (e) {
-    alert('Login failed')
+  catch {
+    message.error('登录失败')
   }
   finally {
     loading.value = false
