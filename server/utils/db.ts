@@ -1,7 +1,14 @@
-import { join } from 'node:path'
+import { existsSync, mkdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import Database from 'better-sqlite3'
 
 const dbPath = join('./data/database.sqlite')
+const dbDir = dirname(dbPath)
+
+if (!existsSync(dbDir)) {
+  mkdirSync(dbDir, { recursive: true })
+}
+
 const db = new Database(dbPath)
 
 // Initialize tables
