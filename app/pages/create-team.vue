@@ -120,7 +120,7 @@ async function createTeam() {
         type: 'performance',
         threshold: r.threshold,
         amount: r.amount,
-        description: `考核 ${r.threshold}+`,
+        description: `层数 ${r.threshold}+`,
       })
     }
   }

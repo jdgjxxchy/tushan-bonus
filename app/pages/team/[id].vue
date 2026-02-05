@@ -180,7 +180,7 @@ async function submitRecord() {
             </div>
 
             <div v-if="roleType === 'support'" class="space-y-4">
-              <label class="text-sm text-gray-700 font-medium block dark:text-gray-300">考核层数 / 评分</label>
+              <label class="text-sm text-gray-700 font-medium block dark:text-gray-300">层数</label>
               <div class="gap-4 grid grid-cols-2">
                 <button
                   class="text-lg font-bold py-3 border rounded-lg transition-colors"
