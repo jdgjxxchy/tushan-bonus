@@ -36,7 +36,7 @@ export default defineEventHandler((event) => {
           reasons.push(`DPS排名前${rule.threshold}`)
         }
         else if (rule.type === 'performance') {
-          reasons.push(`层数评分${data[rule.id]}`)
+          reasons.push(`层数${data[rule.id]}`)
         }
         else if (rule.type === 'fixed') {
           reasons.push(rule.title || '固定补贴')

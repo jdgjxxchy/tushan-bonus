@@ -267,12 +267,12 @@ async function executeCreate(rules: any[], dateStr: string) {
             <div v-for="rule in perfRules" :key="rule.threshold" class="flex gap-4 items-center">
               <div class="flex gap-1 w-32 items-center">
                 <span class="text-sm text-gray-600 font-medium whitespace-nowrap">层数</span>
-                <input v-model="rule.threshold" type="number" class="text-sm input px-2 py-1 text-center w-16" placeholder="90">
+                <input v-model="rule.threshold" class="text-sm input px-2 py-1 text-center w-16" placeholder="90">
                 <span class="text-gray-600 font-medium">+</span>
               </div>
               <div class="flex-1 relative">
                 <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>
-                <input v-model="rule.amount" type="number" class="input text-pink-600 font-bold pl-8 w-full" placeholder="0">
+                <input v-model="rule.amount" class="input text-pink-600 font-bold pl-8 w-full" placeholder="0">
               </div>
             </div>
           </div>

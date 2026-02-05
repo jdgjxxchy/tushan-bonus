@@ -194,7 +194,6 @@ async function deleteTeam() {
                   min="1"
                   max="20"
                   class="text-3xl font-bold py-2 text-center outline-none border-b-2 border-gray-200 bg-transparent flex-1 focus:border-teal-500"
-                  placeholder="1"
                 >
               </div>
             </div>
