@@ -235,8 +235,10 @@ async function createTeam() {
             </div>
 
             <div v-for="rule in perfRules" :key="rule.threshold" class="flex gap-4 items-center">
-              <div class="text-gray-600 font-medium font-mono w-24 dark:text-gray-400">
-                层数 {{ rule.threshold }}+
+              <div class="flex gap-1 w-32 items-center">
+                <span class="text-sm text-gray-600 font-medium whitespace-nowrap dark:text-gray-400">层数</span>
+                <input v-model="rule.threshold" type="number" class="text-sm input px-2 py-1 text-center w-16" placeholder="90">
+                <span class="text-gray-600 font-medium dark:text-gray-400">+</span>
               </div>
               <div class="flex-1 relative">
                 <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>

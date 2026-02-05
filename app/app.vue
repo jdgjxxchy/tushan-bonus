@@ -4,15 +4,15 @@ import { appName } from '~/constants'
 useHead({
   title: appName,
   link: [
-    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
-  ]
+    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+  ],
 })
 </script>
 
 <template>
   <VitePwaManifest />
   <n-notification-provider>
-    <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 font-sans text-gray-700 dark:text-gray-200 transition-colors duration-300">
+    <div class="text-gray-700 font-sans min-h-screen transition-colors duration-300 from-indigo-50 to-cyan-50 via-white bg-gradient-to-br">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
