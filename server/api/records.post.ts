@@ -8,27 +8,31 @@ dayjs.extend(isoWeek)
 function calculateSubsidy(rules: any[], data: any) {
   let total = 0
   for (const rule of rules) {
+    if (rule.type === 'custom') {
+      // For custom rules, data[rule.id] will be true/1 if selected
+      if (data[rule.id]) {
+        total += Number(rule.amount)
+      }
+      continue
+    }
+
     const val = Number(data[rule.id])
-    if (isNaN(val))
+    if (Number.isNaN(val))
       continue
 
     if (rule.type === 'dps_rank') {
-      // Example: Rule threshold 3 (Top 3). Input 1 -> Match. Input 4 -> No.
       if (val <= Number(rule.threshold))
         total += Number(rule.amount)
     }
     else if (rule.type === 'dps_exact_rank') {
-      // Specific rank match (e.g. Rank 1 only)
       if (val === Number(rule.threshold))
         total += Number(rule.amount)
     }
     else if (rule.type === 'performance') {
-      // Performance score (e.g. 90+, 100)
       if (val >= Number(rule.threshold))
         total += Number(rule.amount)
     }
     else if (rule.type === 'layer_count') {
-      // Example: Rule threshold 10 (10 Layers). Input 12 -> Match. Input 5 -> No.
       if (val >= Number(rule.threshold))
         total += Number(rule.amount)
     }

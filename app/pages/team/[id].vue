@@ -1,30 +1,47 @@
 <script setup lang="ts">
 const route = useRoute()
-const teamId = route.params.id
+const teamId = route.params.id as string
 const userStore = useUserStore()
 const message = useMessage()
 
 definePageMeta({ middleware: 'auth' })
 
-const { data: team, refresh } = await useFetch<any>(`/api/teams/${teamId}`)
+const { data: team } = await useFetch<any>(`/api/teams/${teamId}`)
 
 // Registration Logic
 const activeTab = ref('register') // register, settlement
-const submission = ref<Record<string, number>>({})
 const submitting = ref(false)
 const lastResult = ref<any>(null)
 const notification = useNotification()
 
 // New UI Logic
-const roleType = ref<'dps' | 'support'>('dps')
-const dpsRank = ref<number | null>(null)
-const supportScore = ref<number | null>(null) // 90 or 100
+const roleType = ref<'dps' | 'support' | null>(null)
+const selectedRuleId = ref<string | null>(null)
 
 function switchRole(type: 'dps' | 'support') {
   roleType.value = type
-  dpsRank.value = null
-  supportScore.value = null
+  selectedRuleId.value = null
 }
+
+function selectRule(ruleId: string) {
+  selectedRuleId.value = ruleId
+}
+
+// Pre-fill existing record
+watchEffect(() => {
+  if (team.value?.userRecord) {
+    const recordData = team.value.userRecord.data
+    // Find the first rule ID from the record that exists in team.rules
+    const firstRuleId = Object.keys(recordData)[0]
+    if (firstRuleId) {
+      selectedRuleId.value = firstRuleId
+      // Find category
+      const rule = team.value.rules.find((r: any) => r.id === firstRuleId)
+      if (rule)
+        roleType.value = rule.category
+    }
+  }
+})
 
 // Settlement Logic - Moved up to be available for submitRecord
 const { data: settlement, refresh: refreshSettlement } = await useFetch<any>(`/api/teams/${teamId}/settlement`, {
@@ -38,39 +55,16 @@ watch(activeTab, (val) => {
 })
 
 async function submitRecord() {
+  if (!selectedRuleId.value)
+    return
+
   submitting.value = true
   lastResult.value = null
 
   // Construct submission data based on selection
-  const data: Record<string, number> = {}
-
-  if (roleType.value === 'dps' && dpsRank.value) {
-    // Find matching rank rules
-    team.value.rules.forEach((r: any) => {
-      // Logic: if rule is exact rank and matches input
-      if ((r.type === 'dps_exact_rank' && Number(r.threshold) === dpsRank.value)
-        || (r.type === 'dps_rank' && dpsRank.value <= Number(r.threshold))) {
-        data[r.id] = dpsRank.value
-      }
-    })
+  const data: Record<string, number> = {
+    [selectedRuleId.value]: 1,
   }
-  else if (roleType.value === 'support' && supportScore.value) {
-    team.value.rules.forEach((r: any) => {
-      if (r.type === 'performance') {
-        // Apply score to all performance rules
-        // Backend checks val >= threshold.
-        // If I select 100, and rule is 90+, 100 >= 90. OK.
-        data[r.id] = supportScore.value
-      }
-    })
-  }
-
-  // Also include fixed rules if any (auto-apply)
-  team.value.rules.forEach((r: any) => {
-    if (r.type === 'fixed') {
-      data[r.id] = 1
-    }
-  })
 
   try {
     const res: any = await $fetch('/api/records', {
@@ -90,6 +84,27 @@ async function submitRecord() {
   }
   catch {
     message.error('提交失败')
+  }
+  finally {
+    submitting.value = false
+  }
+}
+
+async function cancelRecord() {
+  submitting.value = true
+  try {
+    await $fetch('/api/records', {
+      method: 'DELETE',
+      body: { team_id: teamId },
+    })
+    message.success('已取消登记')
+    refreshSettlement()
+    // Reset local state
+    selectedRuleId.value = null
+    roleType.value = null
+  }
+  catch {
+    message.error('取消失败')
   }
   finally {
     submitting.value = false
@@ -169,7 +184,7 @@ async function deleteTeam() {
               @click="switchRole('dps')"
             >
               <div class="i-carbon-chart-line text-2xl" />
-              <span class="font-bold">DPS (输出)</span>
+              <span class="font-bold">输出</span>
             </button>
 
             <button
@@ -178,54 +193,58 @@ async function deleteTeam() {
               @click="switchRole('support')"
             >
               <div class="i-carbon-favorite text-2xl" />
-              <span class="font-bold">Healer / Tank (辅助/T)</span>
+              <span class="font-bold">奶/T</span>
             </button>
           </div>
 
-          <!-- DPS Input -->
+          <!-- Subsidy Cards -->
           <div v-if="roleType" class="mt-4 p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
-            <div v-if="roleType === 'dps'" class="space-y-4">
-              <label class="text-sm text-gray-700 font-medium block">请输入您的排名</label>
-              <div class="flex gap-4 items-center">
-                <div class="i-carbon-trophy text-2xl text-yellow-500" />
-                <input
-                  v-model.number="dpsRank"
-                  type="number"
-                  min="1"
-                  max="20"
-                  class="text-3xl font-bold py-2 text-center outline-none border-b-2 border-gray-200 bg-transparent flex-1 focus:border-teal-500"
-                >
-              </div>
-            </div>
+            <h3 class="text-sm text-gray-700 font-medium mb-4">
+              请选择一个您符合的补贴项目
+            </h3>
 
-            <div v-if="roleType === 'support'" class="space-y-4">
-              <label class="text-sm text-gray-700 font-medium block">层数</label>
-              <div class="gap-4 grid grid-cols-2">
-                <button
-                  class="text-lg font-bold py-3 border rounded-lg transition-colors"
-                  :class="supportScore === 90 ? 'bg-pink-600 border-pink-600 text-white' : 'border-gray-200 text-gray-600 hover:border-pink-300'"
-                  @click="supportScore = 90"
-                >
-                  90 层+
-                </button>
-                <button
-                  class="text-lg font-bold py-3 border rounded-lg transition-colors"
-                  :class="supportScore === 100 ? 'bg-pink-600 border-pink-600 text-white' : 'border-gray-200 text-gray-600 hover:border-pink-300'"
-                  @click="supportScore = 100"
-                >
-                  100 层
-                </button>
-              </div>
-            </div>
-
-            <div class="mt-8">
+            <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
               <button
-                :disabled="submitting || (!dpsRank && !supportScore)"
-                class="text-xl btn text-white font-bold py-4 bg-teal-600 w-full shadow-none disabled:bg-gray-300 hover:bg-teal-700 disabled:cursor-not-allowed"
+                v-for="rule in team.rules.filter((r: any) => r.category === roleType)"
+                :key="rule.id"
+                class="p-4 text-left border-2 rounded-xl flex flex-col gap-1 transition-all"
+                :class="selectedRuleId === rule.id ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600' : 'border-gray-100 bg-gray-50/50 hover:border-teal-200'"
+                @click="selectRule(rule.id)"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-800 font-bold">{{ rule.name }}</span>
+                  <div
+                    class="border-2 rounded-full flex h-5 w-5 transition-colors items-center justify-center"
+                    :class="selectedRuleId === rule.id ? 'bg-teal-600 border-teal-600' : 'border-gray-300 bg-white'"
+                  >
+                    <div v-if="selectedRuleId === rule.id" class="i-carbon-checkmark text-xs text-white" />
+                  </div>
+                </div>
+                <div class="text-lg text-teal-600 font-bold">
+                  {{ rule.amount }} G
+                </div>
+              </button>
+            </div>
+
+            <div v-if="team.rules.filter((r: any) => r.category === roleType).length === 0" class="text-gray-400 py-6 text-center italic">
+              当前职责下暂无补贴项
+            </div>
+
+            <div class="mt-8 gap-4 grid grid-cols-2">
+              <button
+                :disabled="submitting || !selectedRuleId"
+                class="text-xl btn text-white font-bold py-4 bg-teal-600 shadow-none disabled:bg-gray-300 hover:bg-teal-700 disabled:cursor-not-allowed"
                 @click="submitRecord"
               >
                 <div v-if="submitting" class="i-carbon-circle-dash animate-spin" />
-                <span v-else>提交登记</span>
+                <span v-else>确认并提交</span>
+              </button>
+              <button
+                :disabled="submitting"
+                class="text-xl btn text-gray-500 font-bold py-4 bg-gray-100 shadow-none hover:bg-gray-200"
+                @click="cancelRecord"
+              >
+                <span>取消登记</span>
               </button>
             </div>
           </div>

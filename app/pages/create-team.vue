@@ -16,23 +16,27 @@ const dialog = useDialog()
 // Date handling for Naive UI (timestamp)
 const raidDateTs = ref(Date.now())
 
-// Fixed Rule Inputs
-const dpsRules = ref([
-  { rank: 1, amount: null as number | null },
-  { rank: 2, amount: null as number | null },
-  { rank: 3, amount: null as number | null },
-  { rank: 4, amount: null as number | null },
-  { rank: 5, amount: null as number | null },
-  { rank: 6, amount: null as number | null },
+// Custom Rule Logic
+const rules = ref([
+  { id: Math.random().toString(36).slice(2, 9), name: 'DPS 前六', amount: 1000, category: 'dps' },
+  { id: Math.random().toString(36).slice(2, 9), name: '奶妈层数 90+', amount: 500, category: 'support' },
 ])
 
-const perfRules = ref([
-  { threshold: 90, amount: null as number | null },
-  { threshold: 100, amount: null as number | null },
-])
+function addRule() {
+  rules.value.push({
+    id: Math.random().toString(36).slice(2, 9),
+    name: '',
+    amount: 0,
+    category: 'dps',
+  })
+}
+
+function removeRule(index: number) {
+  rules.value.splice(index, 1)
+}
 
 // Templates
-const templates = useLocalStorage('rule-templates', [] as { name: string, dps: any[], perf: any[] }[])
+const templates = useLocalStorage('rule-templates', [] as { name: string, rules: any[] }[])
 const currentTemplateName = ref('')
 const selectedTemplate = ref(null)
 
@@ -47,8 +51,7 @@ function saveTemplate() {
   const existing = templates.value.findIndex(t => t.name === currentTemplateName.value)
   const templateData = {
     name: currentTemplateName.value,
-    dps: JSON.parse(JSON.stringify(dpsRules.value)),
-    perf: JSON.parse(JSON.stringify(perfRules.value)),
+    rules: JSON.parse(JSON.stringify(rules.value)),
   }
 
   if (existing >= 0) {
@@ -58,7 +61,7 @@ function saveTemplate() {
       positiveText: '作为副本',
       negativeText: '覆盖现有',
       onPositiveClick: () => {
-        templates.value.push(templateData)
+        templates.value.push({ ...templateData, name: `${templateData.name} (副本)` })
         message.success('模板已作为副本保存')
         currentTemplateName.value = ''
       },
@@ -81,8 +84,7 @@ function loadTemplate(tName: string) {
     return
   const t = templates.value.find(x => x.name === tName)
   if (t) {
-    dpsRules.value = JSON.parse(JSON.stringify(t.dps))
-    perfRules.value = JSON.parse(JSON.stringify(t.perf))
+    rules.value = JSON.parse(JSON.stringify(t.rules))
   }
 }
 
@@ -114,44 +116,15 @@ async function createTeam() {
   // Format Date (Local)
   const dateStr = dayjs(raidDateTs.value).format('YYYY-MM-DD')
 
-  // Convert inputs to rule format
-  const rules = []
-
-  // DPS Rules
-  for (const r of dpsRules.value) {
-    if (r.amount && r.amount > 0) {
-      rules.push({
-        id: `dps_${r.rank}`,
-        type: 'dps_exact_rank',
-        threshold: r.rank,
-        amount: r.amount,
-        description: `输出第 ${r.rank} 名`,
-      })
-    }
-  }
-
-  // Performance Rules
-  for (const r of perfRules.value) {
-    if (r.amount && r.amount > 0) {
-      rules.push({
-        id: `perf_${r.threshold}`,
-        type: 'performance',
-        threshold: r.threshold,
-        amount: r.amount,
-        description: `层数 ${r.threshold}+`,
-      })
-    }
-  }
-
   // Basic check
-  if (rules.length === 0) {
+  if (rules.value.length === 0) {
     dialog.warning({
       title: '确认发布',
       content: '未设置任何补贴规则，确定要创建吗？',
       positiveText: '确定',
       negativeText: '取消',
       onPositiveClick: async () => {
-        await executeCreate(rules, dateStr)
+        await executeCreate(rules.value, dateStr)
       },
       onNegativeClick: () => {
         loading.value = false
@@ -160,17 +133,20 @@ async function createTeam() {
     return
   }
 
-  await executeCreate(rules, dateStr)
+  await executeCreate(rules.value, dateStr)
 }
 
-async function executeCreate(rules: any[], dateStr: string) {
+async function executeCreate(finalRules: any[], dateStr: string) {
   try {
     await $fetch('/api/teams', {
       method: 'POST',
       body: {
         name: name.value,
         description: description.value,
-        rules,
+        rules: finalRules.map(r => ({
+          ...r,
+          type: 'custom', // Mark as custom to distinguish in processing
+        })),
         raid_date: dateStr,
       },
     })
@@ -234,47 +210,40 @@ async function executeCreate(rules: any[], dateStr: string) {
 
       <!-- Rules Grid -->
       <div>
-        <h3 class="text-lg text-teal-700 font-medium mb-4">
-          补贴规则设置
-        </h3>
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="text-lg text-teal-700 font-medium">
+            补贴项目设置
+          </h3>
+          <button class="btn-secondary flex gap-1 items-center" @click="addRule">
+            <div class="i-carbon-add" /> 添加项目
+          </button>
+        </div>
 
-        <div class="gap-8 grid grid-cols-1 md:grid-cols-2">
-          <!-- DPS Column -->
-          <div class="space-y-4">
-            <div class="mb-2 pb-2 border-b border-gray-100 flex gap-2 items-center">
-              <div class="i-carbon-chart-line text-xl text-teal-500" />
-              <span class="text-gray-700 font-bold">输出排名补贴 (DPS)</span>
+        <div class="space-y-4">
+          <div v-for="(rule, index) in rules" :key="rule.id" class="p-4 border border-gray-100 rounded-xl bg-white flex gap-4 transition-all items-center hover:border-teal-200">
+            <div class="w-32">
+              <NSelect
+                v-model:value="rule.category"
+                :options="[
+                  { label: '输出', value: 'dps' },
+                  { label: '奶/T', value: 'support' },
+                ]"
+              />
             </div>
-
-            <div v-for="rule in dpsRules" :key="rule.rank" class="flex gap-4 items-center">
-              <div class="text-gray-600 font-medium font-mono w-24">
-                第 {{ rule.rank }} 名
-              </div>
-              <div class="flex-1 relative">
-                <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>
-                <input v-model="rule.amount" class="input text-teal-600 font-bold pl-8 w-full" placeholder="0">
-              </div>
+            <div class="flex-1">
+              <input v-model="rule.name" class="input w-full" placeholder="项目名称，如：DPS 前六">
             </div>
+            <div class="w-32 relative">
+              <input v-model="rule.amount" class="input font-bold pl-8 w-full" placeholder="金额">
+              <span class="text-sm text-gray-400 right-3 top-1/2 absolute -translate-y-1/2">G</span>
+            </div>
+            <button class="text-red-400 p-2 rounded-lg hover:text-red-600 hover:bg-red-50" @click="removeRule(index)">
+              <div class="i-carbon-trash-can" />
+            </button>
           </div>
 
-          <!-- Perf Column -->
-          <div class="space-y-4">
-            <div class="mb-2 pb-2 border-b border-gray-100 flex gap-2 items-center">
-              <div class="i-carbon-favorite text-xl text-pink-500" />
-              <span class="text-gray-700 font-bold">治疗/T 层数</span>
-            </div>
-
-            <div v-for="rule in perfRules" :key="rule.threshold" class="flex gap-4 items-center">
-              <div class="flex gap-1 w-32 items-center">
-                <span class="text-sm text-gray-600 font-medium whitespace-nowrap">层数</span>
-                <input v-model="rule.threshold" class="text-sm input px-2 py-1 text-center w-16" placeholder="90">
-                <span class="text-gray-600 font-medium">+</span>
-              </div>
-              <div class="flex-1 relative">
-                <span class="text-sm text-gray-400 left-3 top-1/2 absolute -translate-y-1/2">G</span>
-                <input v-model="rule.amount" class="input text-pink-600 font-bold pl-8 w-full" placeholder="0">
-              </div>
-            </div>
+          <div v-if="rules.length === 0" class="text-gray-400 py-10 text-center border-2 border-gray-50 rounded-xl border-dashed">
+            点击右上方按钮添加补贴项目
           </div>
         </div>
       </div>

@@ -1,21 +1,22 @@
-import { defineStore, acceptHMRUpdate } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<any>(null)
-  
+
   async function fetchUser() {
     try {
       const data = await $fetch('/api/user')
       user.value = data
-    } catch (e) {
+    }
+    catch {
       user.value = null
     }
   }
 
-  async function login(qq_id: string, nickname: string) {
+  async function login(qq_id: string, nickname?: string) {
     const data = await $fetch('/api/auth/login', {
       method: 'POST',
-      body: { qq_id, nickname }
+      body: { qq_id, nickname },
     })
     user.value = data
     return data
@@ -31,7 +32,7 @@ export const useUserStore = defineStore('user', () => {
     user,
     fetchUser,
     login,
-    logout
+    logout,
   }
 })
 

@@ -14,10 +14,17 @@ export default defineEventHandler((event) => {
   // Check membership
   const member = userId ? db.prepare('SELECT * FROM team_members WHERE team_id = ? AND user_id = ?').get(teamId, userId) : null
   
+  // Get user's existing record
+  const record = userId ? db.prepare('SELECT * FROM records WHERE team_id = ? AND user_id = ?').get(teamId, userId) as any : null
+  if (record) {
+    record.data = record.data ? JSON.parse(record.data) : {}
+  }
+
   return {
     ...team,
     raid_date: team.raid_date,
     rules: team.rules ? JSON.parse(team.rules) : [],
-    isMember: !!member
+    isMember: !!member,
+    userRecord: record
   }
 })
