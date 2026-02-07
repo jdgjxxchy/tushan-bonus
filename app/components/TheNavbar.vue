@@ -46,9 +46,9 @@ const vFocus = {
 
 <template>
   <nav class="mx-4 mb-6 mt-4 card px-6 py-4 flex items-center justify-between">
-    <NuxtLink to="/" class="decoration-none flex gap-4 items-center">
+    <NuxtLink :to="userStore.user ? '/dashboard' : '/'" class="decoration-none flex gap-4 items-center">
       <div class="i-carbon-game-console text-3xl text-teal-500" />
-      <span class="text-xl text-transparent font-bold font-display from-teal-500 to-blue-600 bg-gradient-to-r bg-clip-text">
+      <span class="text-xl text-teal-600 font-bold font-display">
         兔扇补贴登记
       </span>
     </NuxtLink>
