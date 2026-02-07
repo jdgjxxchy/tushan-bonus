@@ -24,12 +24,15 @@ async function handleLogin() {
     router.push('/dashboard')
   }
   catch (e: any) {
-    if (e.statusMessage === 'REGISTER_REQUIRED') {
+    const statusMessage = e.data?.statusMessage || e.statusMessage
+    const statusCode = e.data?.statusCode || e.statusCode
+
+    if (statusMessage === 'REGISTER_REQUIRED' || statusCode === 404) {
       step.value = 'register'
       message.info('该 QQ 号尚未注册，请输入昵称开始使用')
     }
     else {
-      message.error(`登录失败: ${e.data?.message || e.statusMessage || '未知错误'}`)
+      message.error(`登录失败: ${e.data?.message || statusMessage || '未知错误'}`)
     }
   }
   finally {
