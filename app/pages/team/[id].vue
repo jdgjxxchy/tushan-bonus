@@ -17,6 +17,7 @@ const notification = useNotification()
 // New UI Logic
 const roleType = ref<'dps' | 'support' | null>(null)
 const selectedRuleId = ref<string | null>(null)
+const selectedOtherRuleIds = ref<Set<string>>(new Set())
 
 function switchRole(type: 'dps' | 'support') {
   roleType.value = type
@@ -27,19 +28,32 @@ function selectRule(ruleId: string) {
   selectedRuleId.value = ruleId
 }
 
+function toggleOtherRule(ruleId: string) {
+  if (selectedOtherRuleIds.value.has(ruleId))
+    selectedOtherRuleIds.value.delete(ruleId)
+  else
+    selectedOtherRuleIds.value.add(ruleId)
+}
+
 // Pre-fill existing record
 watchEffect(() => {
   if (team.value?.userRecord) {
     const recordData = team.value.userRecord.data
-    // Find the first rule ID from the record that exists in team.rules
-    const firstRuleId = Object.keys(recordData)[0]
-    if (firstRuleId) {
-      selectedRuleId.value = firstRuleId
-      // Find category
-      const rule = team.value.rules.find((r: any) => r.id === firstRuleId)
-      if (rule)
-        roleType.value = rule.category
-    }
+    selectedOtherRuleIds.value.clear()
+
+    // Distinguish between role rules and other rules
+    Object.keys(recordData).forEach((ruleId) => {
+      const rule = team.value.rules.find((r: any) => r.id === ruleId)
+      if (rule) {
+        if (rule.category === 'other') {
+          selectedOtherRuleIds.value.add(ruleId)
+        }
+        else {
+          selectedRuleId.value = ruleId
+          roleType.value = rule.category as 'dps' | 'support'
+        }
+      }
+    })
   }
 })
 
@@ -55,16 +69,24 @@ watch(activeTab, (val) => {
 })
 
 async function submitRecord() {
-  if (!selectedRuleId.value)
+  if (!selectedRuleId.value && selectedOtherRuleIds.value.size === 0) {
+    message.warning('请至少选择一个补贴项')
     return
+  }
 
   submitting.value = true
   lastResult.value = null
 
   // Construct submission data based on selection
-  const data: Record<string, number> = {
-    [selectedRuleId.value]: 1,
+  const data: Record<string, number> = {}
+
+  if (selectedRuleId.value) {
+    data[selectedRuleId.value] = 1
   }
+
+  selectedOtherRuleIds.value.forEach((id) => {
+    data[id] = 1
+  })
 
   try {
     const res: any = await $fetch('/api/records', {
@@ -101,6 +123,7 @@ async function cancelRecord() {
     refreshSettlement()
     // Reset local state
     selectedRuleId.value = null
+    selectedOtherRuleIds.value.clear()
     roleType.value = null
   }
   catch {
@@ -174,79 +197,116 @@ async function deleteTeam() {
       </div>
 
       <div v-else class="space-y-8">
-        <!-- Role Selection -->
-        <div>
-          <label class="text-sm text-gray-700 font-medium mb-3 block">选择您的职责</label>
-          <div class="flex gap-4">
-            <button
-              class="py-4 border-2 rounded-xl flex flex-1 flex-col gap-2 transition-colors items-center"
-              :class="roleType === 'dps' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 hover:border-teal-200 text-gray-500'"
-              @click="switchRole('dps')"
-            >
-              <div class="i-carbon-chart-line text-2xl" />
-              <span class="font-bold">输出</span>
-            </button>
+        <!-- Subsidy Selection -->
+        <div class="space-y-8">
+          <!-- Role Rewards Section -->
+          <div class="space-y-4">
+            <label class="text-sm text-gray-700 font-medium block">
+              职责补贴 <span class="text-xs text-gray-400 font-normal">（二选一）</span>
+            </label>
+            <div class="flex gap-4">
+              <button
+                class="py-4 border-2 rounded-xl flex flex-1 flex-col gap-2 transition-colors items-center"
+                :class="roleType === 'dps' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 hover:border-teal-200 text-gray-500'"
+                @click="switchRole('dps')"
+              >
+                <div class="i-carbon-chart-line text-2xl" />
+                <span class="font-bold">输出</span>
+              </button>
 
-            <button
-              class="py-4 border-2 rounded-xl flex flex-1 flex-col gap-2 transition-colors items-center"
-              :class="roleType === 'support' ? 'border-pink-500 bg-pink-50 text-pink-700' : 'border-gray-200 hover:border-pink-200 text-gray-500'"
-              @click="switchRole('support')"
-            >
-              <div class="i-carbon-favorite text-2xl" />
-              <span class="font-bold">奶/T</span>
-            </button>
+              <button
+                class="py-4 border-2 rounded-xl flex flex-1 flex-col gap-2 transition-colors items-center"
+                :class="roleType === 'support' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-gray-200 hover:border-teal-200 text-gray-500'"
+                @click="switchRole('support')"
+              >
+                <div class="i-carbon-favorite text-2xl" />
+                <span class="font-bold">奶/T</span>
+              </button>
+            </div>
+
+            <!-- Role Cards -->
+            <div v-if="roleType" class="mt-4 p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+              <h3 class="text-sm text-gray-700 font-medium mb-4 italic">
+                请选择一项您在本团符合的条件
+              </h3>
+
+              <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
+                <button
+                  v-for="rule in team.rules.filter((r: any) => r.category === roleType)"
+                  :key="rule.id"
+                  class="p-4 text-left border-2 rounded-xl flex flex-col gap-1 transition-all"
+                  :class="selectedRuleId === rule.id ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600' : 'border-gray-100 bg-gray-50/50 hover:border-teal-200'"
+                  @click="selectRule(rule.id)"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-800 font-bold">{{ rule.name }}</span>
+                    <div
+                      class="border-2 rounded-full flex h-5 w-5 transition-colors items-center justify-center"
+                      :class="selectedRuleId === rule.id ? 'bg-teal-600 border-teal-600' : 'border-gray-300 bg-white'"
+                    >
+                      <div v-if="selectedRuleId === rule.id" class="i-carbon-checkmark text-xs text-white" />
+                    </div>
+                  </div>
+                  <div class="text-lg text-teal-600 font-bold">
+                    {{ rule.amount }} G
+                  </div>
+                </button>
+              </div>
+
+              <div v-if="team.rules.filter((r: any) => r.category === roleType).length === 0" class="text-gray-400 py-6 text-center italic">
+                当前职责下暂无补贴项
+              </div>
+            </div>
           </div>
 
-          <!-- Subsidy Cards -->
-          <div v-if="roleType" class="mt-4 p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
-            <h3 class="text-sm text-gray-700 font-medium mb-4">
-              请选择一个您符合的补贴项目
-            </h3>
-
-            <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
-              <button
-                v-for="rule in team.rules.filter((r: any) => r.category === roleType)"
-                :key="rule.id"
-                class="p-4 text-left border-2 rounded-xl flex flex-col gap-1 transition-all"
-                :class="selectedRuleId === rule.id ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600' : 'border-gray-100 bg-gray-50/50 hover:border-teal-200'"
-                @click="selectRule(rule.id)"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-800 font-bold">{{ rule.name }}</span>
-                  <div
-                    class="border-2 rounded-full flex h-5 w-5 transition-colors items-center justify-center"
-                    :class="selectedRuleId === rule.id ? 'bg-teal-600 border-teal-600' : 'border-gray-300 bg-white'"
-                  >
-                    <div v-if="selectedRuleId === rule.id" class="i-carbon-checkmark text-xs text-white" />
+          <!-- Other Rewards Section -->
+          <div v-if="team.rules.some((r: any) => r.category === 'other')" class="space-y-4">
+            <label class="text-sm text-gray-700 font-medium block">
+              额外补贴 <span class="text-xs text-gray-400 font-normal">（可多选/叠加）</span>
+            </label>
+            <div class="p-6 border border-gray-100 rounded-2xl bg-white shadow-sm">
+              <div class="gap-4 grid grid-cols-1 sm:grid-cols-2">
+                <button
+                  v-for="rule in team.rules.filter((r: any) => r.category === 'other')"
+                  :key="rule.id"
+                  class="p-4 text-left border-2 rounded-xl flex flex-col gap-1 transition-all"
+                  :class="selectedOtherRuleIds.has(rule.id) ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600' : 'border-gray-100 bg-gray-50/50 hover:border-teal-200'"
+                  @click="toggleOtherRule(rule.id)"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-gray-800 font-bold">{{ rule.name }}</span>
+                    <div
+                      class="border-2 rounded-md flex h-5 w-5 transition-colors items-center justify-center"
+                      :class="selectedOtherRuleIds.has(rule.id) ? 'bg-teal-600 border-teal-600' : 'border-gray-300 bg-white'"
+                    >
+                      <div v-if="selectedOtherRuleIds.has(rule.id)" class="i-carbon-checkmark text-xs text-white" />
+                    </div>
                   </div>
-                </div>
-                <div class="text-lg text-teal-600 font-bold">
-                  {{ rule.amount }} G
-                </div>
-              </button>
+                  <div class="text-lg text-teal-600 font-bold">
+                    {{ rule.amount }} G
+                  </div>
+                </button>
+              </div>
             </div>
+          </div>
 
-            <div v-if="team.rules.filter((r: any) => r.category === roleType).length === 0" class="text-gray-400 py-6 text-center italic">
-              当前职责下暂无补贴项
-            </div>
-
-            <div class="mt-8 gap-4 grid grid-cols-2">
-              <button
-                :disabled="submitting || !selectedRuleId"
-                class="text-xl btn text-white font-bold py-4 bg-teal-600 shadow-none disabled:bg-gray-300 hover:bg-teal-700 disabled:cursor-not-allowed"
-                @click="submitRecord"
-              >
-                <div v-if="submitting" class="i-carbon-circle-dash animate-spin" />
-                <span v-else>确认并提交</span>
-              </button>
-              <button
-                :disabled="submitting"
-                class="text-xl btn text-gray-500 font-bold py-4 bg-gray-100 shadow-none hover:bg-gray-200"
-                @click="cancelRecord"
-              >
-                <span>取消登记</span>
-              </button>
-            </div>
+          <!-- Actions -->
+          <div class="mt-12 gap-4 grid grid-cols-2">
+            <button
+              :disabled="submitting || (!selectedRuleId && selectedOtherRuleIds.size === 0)"
+              class="text-xl btn text-white font-bold py-4 bg-teal-600 shadow-none disabled:bg-gray-300 hover:bg-teal-700 disabled:cursor-not-allowed"
+              @click="submitRecord"
+            >
+              <div v-if="submitting" class="i-carbon-circle-dash animate-spin" />
+              <span v-else>确认并提交</span>
+            </button>
+            <button
+              :disabled="submitting"
+              class="text-xl btn text-gray-500 font-bold py-4 bg-gray-100 shadow-none hover:bg-gray-200"
+              @click="cancelRecord"
+            >
+              <span>取消登记</span>
+            </button>
           </div>
         </div>
       </div>

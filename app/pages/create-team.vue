@@ -227,6 +227,7 @@ async function executeCreate(finalRules: any[], dateStr: string) {
                 :options="[
                   { label: '输出', value: 'dps' },
                   { label: '奶/T', value: 'support' },
+                  { label: '其他', value: 'other' },
                 ]"
               />
             </div>

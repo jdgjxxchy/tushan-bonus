@@ -29,21 +29,10 @@ export default defineEventHandler((event) => {
 
     for (const rule of rules) {
       if (data[rule.id]) {
-        if (rule.type === 'dps_exact_rank') {
-          reasons.push(`DPS排名第${data[rule.id]}`)
-        }
-        else if (rule.type === 'dps_rank') {
-          reasons.push(`DPS排名前${rule.threshold}`)
-        }
-        else if (rule.type === 'performance') {
-          reasons.push(`层数${data[rule.id]}`)
-        }
-        else if (rule.type === 'fixed') {
-          reasons.push(rule.title || '固定补贴')
-        }
+        reasons.push(rule.name || rule.title || '补贴项')
       }
     }
-    return { ...r, reason: reasons.join(', ') || '其他' }
+    return { ...r, reason: reasons.join('+') || '其他' }
   })
 
   const total = records.reduce((acc: number, r: any) => acc + r.subsidy_amount, 0)
