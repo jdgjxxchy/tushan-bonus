@@ -26,7 +26,7 @@ export default defineEventHandler((event) => {
     FROM records r
     JOIN users u ON r.user_id = u.id
     JOIN teams t ON r.team_id = t.id
-    WHERE t.raid_date >= ? AND t.raid_date <= ?
+    WHERE t.raid_date >= ? AND t.raid_date <= ? AND t.is_deleted = 0
     ORDER BY u.id
   `).all(startDate, endDate) as any[]
 

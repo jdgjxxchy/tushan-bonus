@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
-const teamId = route.params.id as string
+const teamId = (route.params as any).id as string
 const userStore = useUserStore()
 const message = useMessage()
 
@@ -13,6 +13,40 @@ const activeTab = ref('register') // register, settlement
 const submitting = ref(false)
 const lastResult = ref<any>(null)
 const notification = useNotification()
+
+// Team Name Edit Logic
+const isEditingName = ref(false)
+const editingName = ref('')
+
+function startEditName() {
+  if (String(team.value.owner_id) !== String(userStore.user?.id))
+    return
+  editingName.value = team.value.name
+  isEditingName.value = true
+  nextTick(() => {
+    document.getElementById('team-name-input')?.focus()
+  })
+}
+
+async function updateName() {
+  if (!editingName.value.trim()) {
+    message.warning('团队名称不能为空')
+    return
+  }
+
+  try {
+    await $fetch(`/api/teams/${teamId}`, {
+      method: 'PATCH',
+      body: { name: editingName.value },
+    })
+    team.value.name = editingName.value
+    isEditingName.value = false
+    message.success('修改成功')
+  }
+  catch {
+    message.error('修改失败')
+  }
+}
 
 // New UI Logic
 const roleType = ref<'dps' | 'support' | null>(null)
@@ -151,9 +185,20 @@ async function deleteTeam() {
     <div class="mb-8">
       <div class="mb-2 flex gap-4 items-center">
         <button class="i-carbon-arrow-left text-2xl icon-btn" @click="navigateTo('/dashboard')" />
-        <h1 class="title">
-          {{ team.name }}
-        </h1>
+        <div class="flex-1">
+          <h1 v-if="!isEditingName" class="title cursor-pointer hover:text-teal-600 transition-colors" title="双击修改名称" @dblclick="startEditName">
+            {{ team.name }}
+          </h1>
+          <input
+            v-else
+            id="team-name-input"
+            v-model="editingName"
+            type="text"
+            class="text-2xl font-bold font-display px-2 py-1 border border-teal-500 rounded bg-white w-full max-w-md outline-none"
+            @blur="isEditingName = false"
+            @keyup.enter="updateName"
+          >
+        </div>
         <n-popconfirm v-if="String(team.owner_id) === String(userStore.user?.id)" @positive-click="deleteTeam">
           <template #trigger>
             <button class="text-sm text-red-500 font-medium ml-auto flex gap-1 transition-colors items-center hover:text-red-700">

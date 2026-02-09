@@ -24,6 +24,6 @@ export default defineEventHandler((event) => {
     params.push(monday, sunday)
   }
 
-  sql += ' ORDER BY t.raid_date DESC, t.created_at DESC'
+  sql += ' ORDER BY t.name ASC'
   return db.prepare(sql).all(...params)
 })
